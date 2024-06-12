@@ -13,6 +13,7 @@ pnpm dev
 # or
 bun dev
 ```
+I have created todo app using next.js and antd, I have not used redux-toolkit for small state management but I know how to implement it.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

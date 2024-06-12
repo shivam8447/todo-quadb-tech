@@ -1,95 +1,138 @@
+"use client";
+import { Alert } from "antd";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import styles from "./page.module.css";
+import QBT_LOGO from "../../public/images/QBT_Logo_Black.png";
+import "../../public/scss/index.scss";
+import TaskInput from "../../components/TaskInput";
+import TaskList from "../../components/TaskList";
+import { Provider } from "react-redux";
+import { store } from "./redux-toolkit/store";
 
-export default function Home() {
+const TodoListing = () => {
+  const [toDoInput, setToDoInput] = useState("");
+  const [toDoListingData, setToDoListingData] = useState([]);
+  const [deleteTodo, setDeleteTodo] = useState(false);
+  const [checkedItems, setCheckedItems] = useState({});
+  const [modalOpen, setModalOpen] = useState({});
+
+  const onChange = (id, isChecked) => {
+    setCheckedItems((prevState) => ({
+      ...prevState,
+      [id]: isChecked,
+    }));
+  };
+
+  const storeToDoData = () => {
+    const localTodoData = localStorage.getItem("storedTodo");
+    const todo = JSON.parse(localTodoData) || [];
+    const newToDoItem = {
+      id: Date.now(),
+      text: toDoInput,
+    };
+    const allDataToAdd = [...todo, newToDoItem];
+    toDoInput &&
+      localStorage.setItem("storedTodo", JSON.stringify(allDataToAdd));
+    setToDoInput("");
+    getAllAddedToDos();
+  };
+
+  const getAllAddedToDos = () => {
+    const localTodoData = localStorage.getItem("storedTodo");
+    const todo = JSON.parse(localTodoData);
+    setToDoListingData(todo);
+  };
+
+  useEffect(() => {
+    getAllAddedToDos();
+  }, []);
+
+  const editTodoList = (id, updatedText) => {
+    const updatedToDoData = toDoListingData.map((data) => {
+      if (data.id === id) {
+        return {
+          ...data,
+          text: updatedText,
+        };
+      }
+      return data;
+    });
+
+    toDoInput &&
+      localStorage.setItem("storedTodo", JSON.stringify(updatedToDoData));
+    setToDoListingData(updatedToDoData);
+  };
+
+  const deleteTodoList = (id) => {
+    const updatedToDoData = toDoListingData?.filter((data) => {
+      return data.id !== id;
+    });
+
+    localStorage.setItem("storedTodo", JSON.stringify(updatedToDoData));
+    setDeleteTodo(true);
+    setTimeout(() => {
+      setDeleteTodo(false);
+    }, 1000);
+    getAllAddedToDos();
+  };
+
+  const handleModalOpen = (id) => {
+    setModalOpen((prevState) => ({
+      ...prevState,
+      [id]: true,
+    }));
+    const todo = toDoListingData.find((item) => item.id === id);
+    if (todo) {
+      setToDoInput(todo.text);
+    }
+  };
+
+  const handleModalClose = (id) => {
+    setModalOpen((prevState) => ({
+      ...prevState,
+      [id]: false,
+    }));
+    setToDoInput(""); // Clear the input
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
+    <Provider store={store}>
+      <div className="todo-listing-wrapper">
+        <div className="todo-container">
+          <div className="todo-header">
+            <Image width={154} height={50} src={QBT_LOGO} alt="logo" />
+            <p>Todo Management</p>
+          </div>
+          <TaskInput
+            setToDoInput={setToDoInput}
+            toDoInput={toDoInput}
+            storeToDoData={storeToDoData}
+          />
+          <br />
+          {deleteTodo && (
+            <Alert
+              className="custom-alert-box-css"
+              message="Task deleted successfully"
+              type="success"
+              showIcon
             />
-          </a>
+          )}
+          <TaskList
+            toDoListingData={toDoListingData}
+            onChange={onChange}
+            checkedItems={checkedItems}
+            handleModalOpen={handleModalOpen}
+            deleteTodoList={deleteTodoList}
+            modalOpen={modalOpen}
+            handleModalClose={handleModalClose}
+            editTodoList={editTodoList}
+            toDoInput={toDoInput}
+            setToDoInput={setToDoInput}
+          />
         </div>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </Provider>
   );
-}
+};
+
+export default TodoListing;
